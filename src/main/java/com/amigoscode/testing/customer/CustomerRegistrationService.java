@@ -18,14 +18,14 @@ public class CustomerRegistrationService {
 
     public void registerNewCustomer(CustomerRegistrationRequest request) {
 
-        Optional<Customer> customerByPhoneNumber = customerRepository.findCustomerByPhoneNumber(request.getCustomer().getPhoneNumber());
+        Optional<Customer> customerByPhoneNumber = customerRepository.selectCustomerNumberByPhoneNumber(request.getCustomer().getPhoneNumber());
         if (customerByPhoneNumber.isPresent()) {
 
             if ( customerByPhoneNumber.get().getId().equals(request.getCustomer().getId())
                     && customerByPhoneNumber.get().getName().equals(request.getCustomer().getName())){
                     return;
             }
-            throw new DuplicateResourceException(String.format(" Duplicate customer : %s ", customerByPhoneNumber.get()));
+            throw new DuplicateResourceException(String.format(" Duplicate customer : %s ", customerByPhoneNumber.get().getId()));
         }
 
         if(request.getCustomer().getId() == null) {
