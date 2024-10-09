@@ -98,17 +98,21 @@ class CustomerRegistrationServiceTest {
     void itShouldGenerateANewIdWhenCustomerIDIsNotValid() {
         // Given
         String phoneNumber = "00000";
-        UUID id = null;
-        Customer customer = new Customer(id, "Maryan", phoneNumber);
+        Customer customer = new Customer(null, "Maryan", phoneNumber);
         CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
 
-        given(customerRepository.findCustomerByPhoneNumber(phoneNumber))
+        given(customerRepository.selectCustomerNumberByPhoneNumber(phoneNumber))
                 .willReturn(Optional.empty());
         // When
 
         underTest.registerNewCustomer(request);
         // Then
 
-        then(customerRepository).should(atMostOnce()).save(any());
+        then(customerRepository).should().save(customerArgumentCaptor.capture());
+        Customer customerArgumentCaptureValue =  customerArgumentCaptor.getValue();
+
+        assertThat(customerArgumentCaptureValue)
+                .isEqualToIgnoringGivenFields(customer,"id");
+        assertThat(customerArgumentCaptureValue.getId()).isNotNull();
     }
 }
