@@ -1,5 +1,6 @@
 package com.amigoscode.testing.customer;
 
+import com.amigoscode.testing.utils.PhoneNumberValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
@@ -25,10 +27,13 @@ class CustomerRegistrationServiceTest {
     @Mock
     private  CustomerRepository customerRepository;
 
+    @Mock
+    private PhoneNumberValidator phoneNumberValidator;
+
     @BeforeEach
     void setup(){
         MockitoAnnotations.initMocks(this);
-        underTest = new CustomerRegistrationService(customerRepository) {
+        underTest = new CustomerRegistrationService(customerRepository,phoneNumberValidator) {
         };
     }
 
@@ -44,6 +49,7 @@ class CustomerRegistrationServiceTest {
 
         given(customerRepository.selectCustomerNumberByPhoneNumber(phoneNumber))
                 .willReturn(Optional.empty());
+        given(phoneNumberValidator.test(any())).willReturn(true);
 
         // When
         underTest.registerNewCustomer(request);
@@ -66,6 +72,8 @@ class CustomerRegistrationServiceTest {
 
         given(customerRepository.selectCustomerNumberByPhoneNumber(phoneNumber))
                 .willReturn(Optional.of(customer));
+
+        given(phoneNumberValidator.test(any())).willReturn(true);
         // When
         underTest.registerNewCustomer(request);
         // Then
@@ -84,6 +92,7 @@ class CustomerRegistrationServiceTest {
 
         given(customerRepository.selectCustomerNumberByPhoneNumber(phoneNumber))
                 .willReturn(Optional.of(new Customer(id, "New Customer", phoneNumber)));
+        given(phoneNumberValidator.test(any())).willReturn(true);
         // When
         assertThatExceptionOfType(DuplicateResourceException.class)
                 .isThrownBy(()-> { underTest.registerNewCustomer(request);})
@@ -103,6 +112,7 @@ class CustomerRegistrationServiceTest {
 
         given(customerRepository.selectCustomerNumberByPhoneNumber(phoneNumber))
                 .willReturn(Optional.empty());
+        given(phoneNumberValidator.test(any())).willReturn(true);
         // When
 
         underTest.registerNewCustomer(request);
@@ -114,5 +124,23 @@ class CustomerRegistrationServiceTest {
         assertThat(customerArgumentCaptureValue)
                 .isEqualToIgnoringGivenFields(customer,"id");
         assertThat(customerArgumentCaptureValue.getId()).isNotNull();
+    }
+
+    @Test
+    void itShouldNotSaveNewCustomerWhenPhoneNumberIsInvalid() {
+        // Given
+        String phoneNumber = "00000";
+        Customer customer = new Customer(null, "Maryan", phoneNumber);
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
+
+        given(phoneNumberValidator.test(phoneNumber)).willReturn(false);
+
+        // When
+        assertThatThrownBy(()-> underTest.registerNewCustomer(request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Phone Number " +  phoneNumber + " is not valid");
+
+        // Then
+        then(customerRepository).shouldHaveNoInteractions();
     }
 }
