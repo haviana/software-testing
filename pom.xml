@@ -50,6 +50,11 @@
 			<artifactId>stripe-java</artifactId>
 			<version>19.2.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.twilio.sdk</groupId>
+			<artifactId>twilio-java-sdk</artifactId>
+			<version>7.0.0-rc-10</version>
+		</dependency>
 
 
 	</dependencies>

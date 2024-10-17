@@ -45,8 +45,6 @@ class StripeServiceTest {
         given(stripeAPI.create(any(),any())).willReturn(t);
 
         // When
-
-
         CardPaymentCharge cardPaymentCharge = underTest.chargeCard(cardSource, amount, Currency.USD, description);
 
         // Then
@@ -62,7 +60,6 @@ class StripeServiceTest {
         assertThat(optionsArgumentCaptor.getValue()).isNotNull();
 
         assertThat(cardPaymentCharge.isCardDebited()).isTrue();
-
 
     }
 }
